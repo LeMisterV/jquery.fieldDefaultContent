@@ -3,112 +3,117 @@
 		throw 'Dépendence non satisfaite : jQuery';
 	}
 
-	var fieldDefaultContent = function(elem, sContent, sColor) {
-		var $elem = $(elem),
-		sOriginalColor, rPattern,
+	var FieldDefaultContent = function(elem, sContent, sColor) {
+		var $this = this;
 
-		focus = function() {
-			$elem
-				.stop()
-				.css('color', sOriginalColor);
-			if($elem.val() === sContent) {
-				$elem.val('');
-			}
-		},
+		this.elem = $(elem);
+		this.sColor = sColor || '#999';
+		this.sContent = sContent || $('label[for='+this.elem.attr('id')+']:not(visible)').text();
+		this.rPattern = new RegExp('^(\\s+|'+this.sContent+')?$');
+		this.sOriginalColor = this.elem.css('color');
+		this.sOriginalBackground = this.elem.css('background-color') || 'white';
 
-		blur = function() {
-			if(rPattern.test($elem.val())) {
-				if($.fx.step.color) {
-					$elem
-						.css('color', sOriginalBackground)
-						.val(sContent)
-						.animate(
-							{color		: sColor},
-							{
-								duration	: 'slow',
-								queue		: false
-							}
-						);
-				}
-				else {
-					$elem
-						.css('color', sColor)
-						.val(sContent);
-				}
-			}
-		},
+		if($.browser.opera && this.sOriginalBackground == 'transparent') {
+			this.sOriginalBackground = 'white';
+		}
 
-		submit = function() {
-			if(rPattern.test($elem.val())) {
-				if($.fx.step.color && $.fx.step.backgroundColor) {
-					$elem
+		this.elem
+			.focus(function() {
+				$this.focus();
+			})
+			.blur(function() {
+				$this.blur();
+			})
+			.each(function() {
+				$(this.form)
+					.submit(function() {
+						return $this.submit();
+					});
+			})
+			.blur();
+	};
+
+	FieldDefaultContent.prototype = {
+		focus	: function() {
+					this.elem
 						.stop()
-						.each(blur)
-						.animate(
-							{
-								backgroundColor	: '#f88',
-								color			: 'white'
-							},
-							{
-								duration	: 'slow',
-								queue		: false,
-								complete	: function() {
-												$(this).animate(
-													{
-														backgroundColor	: sOriginalBackground,
-														color			: sOriginalBackground
-													},
-													{
-														duration	: 'slow',
-														queue		: false,
-														complete	: function() {
-																		$elem
-																			.focus();
-																	}
+						.css('color', this.sOriginalColor);
+					if(this.elem.val() === this.sContent) {
+						this.elem.val('');
+					}
+				},
+		blur	: function() {
+					if(this.rPattern.test(this.elem.val())) {
+						if($.fx.step.color) {
+							this.elem
+								.css('color', this.sOriginalBackground)
+								.val(this.sContent)
+								.animate(
+									{color		: this.sColor},
+									{
+										duration	: 'slow',
+										queue		: false
+									}
+								);
+						}
+						else {
+							this.elem
+								.css('color', this.sColor)
+								.val(this.sContent);
+						}
+					}
+				},
+		submit	: function() {
+					var $this = this;
+					if(this.rPattern.test(this.elem.val())) {
+						if($.fx.step.color && $.fx.step.backgroundColor) {
+							this.elem
+								.stop()
+								.each(function() {
+									$this.blur();
+								})
+								.animate(
+									{
+										backgroundColor	: '#f88',
+										color			: 'white'
+									},
+									{
+										duration	: 'slow',
+										queue		: false,
+										complete	: function() {
+														$(this).animate(
+															{
+																backgroundColor	: $this.sOriginalBackground,
+																color			: $this.sOriginalBackground
+															},
+															{
+																duration	: 'slow',
+																queue		: false,
+																complete	: function() {
+																				$this.elem
+																					.focus();
+																			}
+															}
+														);
 													}
-												);
-											}
-							}
-						);
+									}
+								);
+						}
+						else {
+							this.elem
+								.focus();
+						}
+						return false;
+					}
 				}
-				else {
-					$elem
-						.focus();
-				}
-				return false;
-			}
-		},
-
-		init = function() {
-			sColor = sColor || '#999';
-			sContent = sContent || $('label[for='+$elem.attr('id')+']:not(visible)').text();
-			rPattern = new RegExp('^(\\s+|'+sContent+')?$');
-			sOriginalColor = $elem.css('color');
-			sOriginalBackground = $elem.css('background-color') || 'white';
-			if($.browser.opera && sOriginalBackground == 'transparent') {
-				sOriginalBackground = 'white';
-			}
-
-			$elem
-				.focus(focus)
-				.blur(blur)
-				.each(function() {
-					$(this.form)
-						.submit(submit);
-				})
-				.blur();
-		};
-
-		init();
 	};
 
 	$.fn.fieldDefaultContent = function(sContent, sColor) {
 		return this
 			.filter('input, textarea')
 				.each(function() {
-					fieldDefaultContent(this, sContent, sColor);
-				})
-			.end();
+					new FieldDefaultContent(this, sContent, sColor);
+				});
 	};
 
 })(this, this.jQuery);
