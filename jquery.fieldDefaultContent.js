@@ -1,114 +1,95 @@
-(function(window, $, undef) {
-	if($ === undef) {
-		throw 'Dépendence non satisfaite : jQuery';
-	}
+(function (window, Error, RegExp, $, undef) {
+    if ($ === undef) {
+        throw new Error('DÃ©pendence non satisfaite : jQuery');
+    }
 
-	var fieldDefaultContent = function(elem, sContent, sColor) {
-		var $elem = $(elem),
-		sOriginalColor, rPattern,
+    var fieldDefaultContent = function (elem, sContent, sColor, bBold) {
+        var $elem = $(elem),
+        sOriginalColor, sOriginalBackground, bOriginalBold, rPattern;
 
-		focus = function() {
-			$elem
-				.stop()
-				.css('color', sOriginalColor);
-			if($elem.val() === sContent) {
-				$elem.val('');
-			}
-		},
+        function focus() {
+            $elem
+                .stop()
+                .css({
+                    color            : sOriginalColor,
+                    'font-weight'    : bOriginalBold ? 'bold' : 'normal'
+                });
 
-		blur = function() {
-			if(rPattern.test($elem.val())) {
-				if($.fx.step.color) {
-					$elem
-						.css('color', sOriginalBackground)
-						.val(sContent)
-						.animate(
-							{color		: sColor},
-							{
-								duration	: 'slow',
-								queue		: false
-							}
-						);
-				}
-				else {
-					$elem
-						.css('color', sColor)
-						.val(sContent);
-				}
-			}
-		},
+            if ($elem.val() === sContent) {
+                $elem.val('');
+            }
+        }
 
-		submit = function() {
-			if(rPattern.test($elem.val())) {
-				if($.fx.step.color && $.fx.step.backgroundColor) {
-					$elem
-						.stop()
-						.each(blur)
-						.animate(
-							{
-								backgroundColor	: '#f88',
-								color			: 'white'
-							},
-							{
-								duration	: 'slow',
-								queue		: false,
-								complete	: function() {
-												$(this).animate(
-													{
-														backgroundColor	: sOriginalBackground,
-														color			: sOriginalBackground
-													},
-													{
-														duration	: 'slow',
-														queue		: false,
-														complete	: function() {
-																		$elem
-																			.focus();
-																	}
-													}
-												);
-											}
-							}
-						);
-				}
-				else {
-					$elem
-						.focus();
-				}
-				return false;
-			}
-		},
+        function blur() {
+            if (rPattern.test($elem.val())) {
+                if ($.fx.step.color) {
+                    $elem
+                        .css({
+                            color           : sOriginalBackground,
+                            'font-weight'   : (bBold || bOriginalBold) ? 'bold' : 'normal'
+                        })
+                        .val(sContent)
+                        .animate(
+                            {color          : sColor},
+                            {
+                                duration    : 'slow',
+                                queue       : false
+                            }
+                        );
+                }
+                else {
+                    $elem
+                        .css({
+                            color           : sColor,
+                            'font-weight'   : bBold ? 'bold' : 'normal'
+                        })
+                        .val(sContent);
+                }
+            }
+        }
 
-		init = function() {
-			sColor = sColor || '#999';
-			sContent = sContent || $('label[for='+$elem.attr('id')+']:not(visible)').text();
-			rPattern = new RegExp('^(\\s+|'+sContent+')?$');
-			sOriginalColor = $elem.css('color');
-			sOriginalBackground = $elem.css('background-color') || 'white';
-			if($.browser.opera && sOriginalBackground == 'transparent') {
-				sOriginalBackground = 'white';
-			}
+        function submit() {
+            if (rPattern.test($elem.val())) {
+                $elem
+                    .stop()
+                    .each(focus);
+            }
+        }
 
-			$elem
-				.focus(focus)
-				.blur(blur)
-				.each(function() {
-					$(this.form)
-						.submit(submit);
-				})
-				.blur();
-		};
+        function init() {
+            if (typeof sColor === 'boolean') {
+                bBold = sColor;
+                sColor = undef;
+            }
+            sColor = sColor || '#999';
+            sContent = sContent || $('label[for=' + $elem.attr('id') + ']:not(visible)').text();
+            rPattern = new RegExp('^(\\s+|' + sContent + ')?$');
+            sOriginalColor = $elem.css('color');
+            bOriginalBold = $elem.css('font-weight') === 'bold';
+            sOriginalBackground = $elem.css('background-color') || 'white';
 
-		init();
-	};
+            bBold = bBold === undef ? bOriginalBold : bBold;
 
-	$.fn.fieldDefaultContent = function(sContent, sColor) {
-		return this
-			.filter('input, textarea')
-				.each(function() {
-					fieldDefaultContent(this, sContent, sColor);
-				})
-			.end();
-	};
+            $elem
+                .focus(focus)
+                .blur(blur)
+                .each(function () {
+                    $(this.form)
+                        .submit(submit);
+                })
+                .blur();
+        }
 
-})(this, this.jQuery);
+        init();
+    };
+
+    $.fn.fieldDefaultContent = function (sContent, sColor, bBold) {
+        return this
+            .filter('input, textarea')
+                .each(function () {
+                    fieldDefaultContent(this, sContent, sColor, bBold);
+                })
+            .end();
+    };
+
+}(this, this.Error, this.RegExp, this.jQuery));
