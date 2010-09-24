@@ -1,5 +1,5 @@
 <?php
-$projName = 'jQuery.onglet';
+$projName = 'jQuery.fieldDefaultContent';
 
 // Liste des fichiers JS qui composent ce projet
 $projScripts = array(
