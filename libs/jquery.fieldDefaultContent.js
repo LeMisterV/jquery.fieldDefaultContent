@@ -5,7 +5,7 @@
 
     var fieldDefaultContent = function (elem, sContent, sColor, bBold) {
         var $elem = $(elem),
-        sOriginalColor, sOriginalBackground, bOriginalBold, rPattern;
+            sOriginalColor, sOriginalBackground, bOriginalBold, rPattern;
 
         function focus() {
             $elem
