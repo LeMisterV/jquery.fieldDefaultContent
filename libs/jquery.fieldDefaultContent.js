@@ -11,7 +11,8 @@
         function focus() {
             $elem
                 .stop()
-                .removeAttr('style');
+                .removeAttr('style')
+                .removeClass('defaultContent');
 
             if ($elem.val() === sContent) {
                 $elem.val('');
@@ -19,32 +20,30 @@
         }
 
         function blur() {
-            var val = $elem.val();
+            var val = $elem.val(),
+                color = ('color' in $.fx.step) ? sOriginalBackground : sColor;
+
             if (val == sContent || rPattern.test(val)) {
-                if ($.fx.step.color) {
+                $elem
+                    .css({
+                        color           : color,
+                        'font-weight'   : bBold ? 'bold' : 'normal',
+                        'font-size'     : sFontSize
+                    })
+                    .addClass('defaultContent')
+                    .val(sContent);
+
+                if ('color' in $.fx.step) {
                     $elem
-                        .css({
-                            color           : sOriginalBackground,
-                            'font-weight'   : bBold ? 'bold' : 'normal',
-                            'font-size'     : sFontSize
-                        })
-                        .val(sContent)
                         .animate(
-                            {color          : sColor},
+                            {
+                                color          : sColor
+                            },
                             {
                                 duration    : 'slow',
                                 queue       : false
                             }
                         );
-                }
-                else {
-                    $elem
-                        .css({
-                            color           : sColor,
-                            'font-weight'   : bBold ? 'bold' : 'normal',
-                            'font-size'     : sFontSize
-                        })
-                        .val(sContent);
                 }
             }
         }
