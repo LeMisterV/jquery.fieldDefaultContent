@@ -3,17 +3,16 @@
         throw new Error('Dépendence non satisfaite : jQuery');
     }
 
-    var fieldDefaultContent = function (elem, sContent, sColor, bBold) {
+    function fieldDefaultContent(elem, options) {
         var $elem = $(elem),
-        sOriginalColor, sOriginalBackground, bOriginalBold, rPattern;
+            sContent, sColor, bBold, sFontSize,
+            sOriginalBackground, rPattern;
 
         function focus() {
             $elem
                 .stop()
-                .css({
-                    color            : sOriginalColor,
-                    'font-weight'    : bOriginalBold ? 'bold' : 'normal'
-                });
+                .removeAttr('style')
+                .removeClass('defaultContent');
 
             if ($elem.val() === sContent) {
                 $elem.val('');
@@ -21,29 +20,30 @@
         }
 
         function blur() {
-            if (rPattern.test($elem.val())) {
-                if ($.fx.step.color) {
+            var val = $elem.val(),
+                color = ('color' in $.fx.step) ? sOriginalBackground : sColor;
+
+            if (val == sContent || rPattern.test(val)) {
+                $elem
+                    .css({
+                        color           : color,
+                        'font-weight'   : bBold ? 'bold' : 'normal',
+                        'font-size'     : sFontSize
+                    })
+                    .addClass('defaultContent')
+                    .val(sContent);
+
+                if ('color' in $.fx.step) {
                     $elem
-                        .css({
-                            color           : sOriginalBackground,
-                            'font-weight'   : (bBold || bOriginalBold) ? 'bold' : 'normal'
-                        })
-                        .val(sContent)
                         .animate(
-                            {color          : sColor},
+                            {
+                                color          : sColor
+                            },
                             {
                                 duration    : 'slow',
                                 queue       : false
                             }
                         );
-                }
-                else {
-                    $elem
-                        .css({
-                            color           : sColor,
-                            'font-weight'   : bBold ? 'bold' : 'normal'
-                        })
-                        .val(sContent);
                 }
             }
         }
@@ -57,18 +57,13 @@
         }
 
         function init() {
-            if (typeof sColor === 'boolean') {
-                bBold = sColor;
-                sColor = undef;
-            }
-            sColor = sColor || '#999';
-            sContent = sContent || $('label[for=' + $elem.attr('id') + ']:not(visible)').text();
+            sColor = options.color || '#999';
+            sContent = options.content || $('label[for=' + $elem.attr('id') + ']:not(visible)').text();
             rPattern = new RegExp('^(\\s+|' + sContent + ')?$');
-            sOriginalColor = $elem.css('color');
-            bOriginalBold = $elem.css('font-weight') === 'bold';
             sOriginalBackground = $elem.css('background-color') || 'white';
 
-            bBold = bBold === undef ? bOriginalBold : bBold;
+            bBold = options.bold === undef ? $elem.css('font-weight') === 'bold' : options.bold;
+            sFontSize = options.fontSize === undef ? $elem.css('font-size') : options.fontSize;
 
             $elem
                 .focus(focus)
@@ -83,11 +78,25 @@
         init();
     };
 
-    $.fn.fieldDefaultContent = function (sContent, sColor, bBold) {
+    $.fn.fieldDefaultContent = function (options) {
+        if (typeof options !== 'object') {
+            options = {
+                content     : options,
+                color       : arguments[1],
+                bold        : arguments[2],
+                fontSize    : arguments[3]
+            };
+
+            if (typeof arguments[1] === 'boolean') {
+                options.bold = options.color;
+                delete options.color;
+            }
+        }
+
         return this
             .filter('input, textarea')
                 .each(function () {
-                    fieldDefaultContent(this, sContent, sColor, bBold);
+                    fieldDefaultContent(this, options);
                 })
             .end();
     };
