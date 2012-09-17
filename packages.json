@@ -1,0 +1,7 @@
+{
+    "packages" : {
+        "default" : {
+            "jquery.fieldDefaultContent/libs/jquery.fieldDefaultContent.js"               : "utf-8"
+        }
+    }
+}
